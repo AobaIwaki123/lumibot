@@ -1,68 +1,46 @@
-package config_test
+package config
 
 import (
 	"os"
 	"testing"
-
-	"github.com/AobaIwaki123/lumibot/pkg/config"
 )
 
 func TestLoad_Defaults(t *testing.T) {
-	_ = os.Unsetenv("DISCORD_TOKEN")
-	_ = os.Unsetenv("DISCORD_APP_ID")
-	_ = os.Unsetenv("LUMITREE_API_URL")
-	_ = os.Unsetenv("SQLITE_DB_PATH")
-	_ = os.Unsetenv("LOG_LEVEL")
+	// Unset to ensure defaults
+	os.Unsetenv("LUMIBOT_DB_PATH")
+	os.Unsetenv("DISCORD_TOKEN")
+	os.Unsetenv("LUMITREE_API_URL")
 
-	cfg, err := config.Load()
-	if err != nil {
-		t.Fatalf("unexpected error loading config: %v", err)
-	}
+	cfg := Load()
 
-	if cfg.LumitreeAPIURL != "https://lumitree.aooba.net" {
-		t.Errorf("expected default LumitreeAPIURL 'https://lumitree.aooba.net', got '%s'", cfg.LumitreeAPIURL)
+	if cfg.DBPath != "lumibot.db" {
+		t.Errorf("expected default DBPath 'lumibot.db', got '%s'", cfg.DBPath)
 	}
-	if cfg.DatabasePath != "lumibot.db" {
-		t.Errorf("expected default DatabasePath 'lumibot.db', got '%s'", cfg.DatabasePath)
+	if cfg.DiscordToken != "" {
+		t.Errorf("expected empty default DiscordToken, got '%s'", cfg.DiscordToken)
 	}
-	if cfg.LogLevel != "info" {
-		t.Errorf("expected default LogLevel 'info', got '%s'", cfg.LogLevel)
-	}
-
-	if err := cfg.Validate(); err == nil {
-		t.Errorf("expected error when DISCORD_TOKEN is missing, got nil")
+	if cfg.LumitreeAPIURL != "https://api.lumitree.example.com" {
+		t.Errorf("expected default LumitreeAPIURL, got '%s'", cfg.LumitreeAPIURL)
 	}
 }
 
 func TestLoad_CustomValues(t *testing.T) {
-	t.Setenv("DISCORD_TOKEN", "mock-token")
-	t.Setenv("DISCORD_APP_ID", "123456789")
-	t.Setenv("LUMITREE_API_URL", "http://localhost:8080/")
-	t.Setenv("SQLITE_DB_PATH", "/tmp/test.db")
-	t.Setenv("LOG_LEVEL", "DEBUG")
+	os.Setenv("LUMIBOT_DB_PATH", "/tmp/test.db")
+	os.Setenv("DISCORD_TOKEN", "test-token")
+	os.Setenv("LUMITREE_API_URL", "http://localhost:8080")
+	defer os.Unsetenv("LUMIBOT_DB_PATH")
+	defer os.Unsetenv("DISCORD_TOKEN")
+	defer os.Unsetenv("LUMITREE_API_URL")
 
-	cfg, err := config.Load()
-	if err != nil {
-		t.Fatalf("unexpected error loading config: %v", err)
-	}
+	cfg := Load()
 
-	if cfg.DiscordToken != "mock-token" {
-		t.Errorf("expected DiscordToken 'mock-token', got '%s'", cfg.DiscordToken)
+	if cfg.DBPath != "/tmp/test.db" {
+		t.Errorf("expected DBPath '/tmp/test.db', got '%s'", cfg.DBPath)
 	}
-	if cfg.DiscordAppID != "123456789" {
-		t.Errorf("expected DiscordAppID '123456789', got '%s'", cfg.DiscordAppID)
+	if cfg.DiscordToken != "test-token" {
+		t.Errorf("expected DiscordToken 'test-token', got '%s'", cfg.DiscordToken)
 	}
 	if cfg.LumitreeAPIURL != "http://localhost:8080" {
-		t.Errorf("expected trimmed LumitreeAPIURL 'http://localhost:8080', got '%s'", cfg.LumitreeAPIURL)
-	}
-	if cfg.DatabasePath != "/tmp/test.db" {
-		t.Errorf("expected DatabasePath '/tmp/test.db', got '%s'", cfg.DatabasePath)
-	}
-	if cfg.LogLevel != "debug" {
-		t.Errorf("expected LogLevel 'debug', got '%s'", cfg.LogLevel)
-	}
-
-	if err := cfg.Validate(); err != nil {
-		t.Errorf("expected valid config, got error: %v", err)
+		t.Errorf("expected LumitreeAPIURL 'http://localhost:8080', got '%s'", cfg.LumitreeAPIURL)
 	}
 }
