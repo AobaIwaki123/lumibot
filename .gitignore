@@ -6,7 +6,7 @@
 *.dylib
 bin/
 dist/
-lumibot
+/lumibot
 
 # Test artifacts
 *.out
