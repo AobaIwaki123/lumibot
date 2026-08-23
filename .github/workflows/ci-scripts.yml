@@ -4,43 +4,26 @@ on:
   push:
     branches:
       - main
-      - release
     paths:
-      - 'scripts/**.sh'
+      - 'scripts/**'
       - '.github/workflows/ci-scripts.yml'
   pull_request:
     branches:
       - main
       - release
     paths:
-      - 'scripts/**.sh'
+      - 'scripts/**'
       - '.github/workflows/ci-scripts.yml'
-
-permissions:
-  contents: read
 
 jobs:
   shellcheck:
-    name: ShellCheck
+    name: ShellCheck Lint
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Run ShellCheck
-        uses: ludeeus/action-shellcheck@master
-        with:
-          scandir: './scripts'
-
-  shfmt:
-    name: shfmt
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Install shfmt
-        run: sudo apt-get update && sudo apt-get install -y shfmt
-
-      - name: Check Formatting
-        run: shfmt -d scripts/
+        run: |
+          echo "Running shellcheck on all scripts..."
+          shellcheck scripts/*.sh

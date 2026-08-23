@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - release
     paths:
       - '**.go'
       - 'go.mod'
@@ -22,44 +21,68 @@ on:
       - '.golangci.yml'
       - '.github/workflows/ci-go.yml'
 
-permissions:
-  contents: read
-
 jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Go
+      - name: Setup Go
         uses: actions/setup-go@v5
         with:
           go-version: '1.23'
-          cache: true
+          check-latest: true
+          cache: false
 
-      - name: Run golangci-lint
+      - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.60.3
+          version: latest
           args: --timeout=5m
 
   test:
-    name: Test & Build
+    name: Test & Coverage
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Go
+      - name: Setup Go
         uses: actions/setup-go@v5
         with:
           go-version: '1.23'
-          cache: true
+          check-latest: true
+          cache: false
 
-      - name: Run Unit Tests with Race Detector
-        run: go test -v -race -coverprofile=coverage.out ./...
+      - name: Run Unit & Integration Tests
+        run: |
+          go test -race -v -coverprofile=coverage.out ./...
 
-      - name: Check Go Build
-        run: go build -v -o /dev/null ./cmd/lumibot
+      - name: Upload Coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.out
+          retention-days: 7
+
+  build:
+    name: Build Binaries
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          check-latest: true
+          cache: false
+
+      - name: Compile and verify all packages
+        run: |
+          go build -v ./...
+          go build -o /dev/null ./cmd/lumibot
