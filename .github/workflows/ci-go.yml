@@ -21,6 +21,9 @@ on:
       - '.golangci.yml'
       - '.github/workflows/ci-go.yml'
 
+env:
+  GOTOOLCHAIN: local
+
 jobs:
   lint:
     name: Lint
@@ -33,7 +36,6 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.23'
-          check-latest: true
           cache: true
 
       - name: Install and run golangci-lint
@@ -52,7 +54,6 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.23'
-          check-latest: true
           cache: true
 
       - name: Run Unit & Integration Tests
@@ -78,7 +79,6 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.23'
-          check-latest: true
           cache: true
 
       - name: Compile and verify all packages
