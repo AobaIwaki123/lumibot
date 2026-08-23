@@ -1,3 +1,4 @@
+// Package store provides SQLite-backed persistent storage.
 package store
 
 import (
@@ -88,6 +89,7 @@ func (s *SQLStore) initSchema(ctx context.Context) error {
 	return err
 }
 
+// AddSubscription adds a new subscription.
 func (s *SQLStore) AddSubscription(ctx context.Context, guildID, calendarID, title string) error {
 	query := `
 	INSERT INTO subscriptions (guild_id, calendar_id, calendar_title)
@@ -101,6 +103,7 @@ func (s *SQLStore) AddSubscription(ctx context.Context, guildID, calendarID, tit
 	return nil
 }
 
+// ListSubscriptions returns all subscriptions.
 func (s *SQLStore) ListSubscriptions(ctx context.Context, guildID string) ([]Subscription, error) {
 	query := `
 	SELECT id, guild_id, calendar_id, calendar_title, created_at
@@ -125,6 +128,7 @@ func (s *SQLStore) ListSubscriptions(ctx context.Context, guildID string) ([]Sub
 	return results, rows.Err()
 }
 
+// RemoveSubscription removes a subscription.
 func (s *SQLStore) RemoveSubscription(ctx context.Context, guildID, calendarID string) error {
 	query := `DELETE FROM subscriptions WHERE guild_id = ? AND calendar_id = ?;`
 	_, err := s.db.ExecContext(ctx, query, guildID, calendarID)
@@ -134,6 +138,7 @@ func (s *SQLStore) RemoveSubscription(ctx context.Context, guildID, calendarID s
 	return nil
 }
 
+// SetNotifyChannel sets the notification channel.
 func (s *SQLStore) SetNotifyChannel(ctx context.Context, guildID, channelID string) error {
 	query := `
 	INSERT INTO guild_settings (guild_id, notify_channel_id)
@@ -147,6 +152,7 @@ func (s *SQLStore) SetNotifyChannel(ctx context.Context, guildID, channelID stri
 	return nil
 }
 
+// GetGuildSettings retrieves guild settings.
 func (s *SQLStore) GetGuildSettings(ctx context.Context, guildID string) (*GuildSettings, error) {
 	query := `
 	SELECT guild_id, notify_channel_id, alert_channel_id, cron_time, created_at

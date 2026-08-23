@@ -1,3 +1,4 @@
+// Package main is the entry point for the lumibot application.
 package main
 
 import (
@@ -21,7 +22,9 @@ func main() {
 		slog.Error("Failed to initialize database", "error", err)
 		os.Exit(1)
 	}
-	defer st.Close()
+	defer func() {
+		_ = st.Close()
+	}()
 
 	// Initialize API Client
 	apiClient, err := client.NewLumitreeClient(cfg.LumitreeAPIURL)

@@ -1,3 +1,4 @@
+// Package config provides configuration loading for the bot.
 package config
 
 import "os"

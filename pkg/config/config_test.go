@@ -7,9 +7,9 @@ import (
 
 func TestLoad_Defaults(t *testing.T) {
 	// Unset to ensure defaults
-	os.Unsetenv("LUMIBOT_DB_PATH")
-	os.Unsetenv("DISCORD_TOKEN")
-	os.Unsetenv("LUMITREE_API_URL")
+	_ = os.Unsetenv("LUMIBOT_DB_PATH")
+	_ = os.Unsetenv("DISCORD_TOKEN")
+	_ = os.Unsetenv("LUMITREE_API_URL")
 
 	cfg := Load()
 
@@ -25,12 +25,14 @@ func TestLoad_Defaults(t *testing.T) {
 }
 
 func TestLoad_CustomValues(t *testing.T) {
-	os.Setenv("LUMIBOT_DB_PATH", "/tmp/test.db")
-	os.Setenv("DISCORD_TOKEN", "test-token")
-	os.Setenv("LUMITREE_API_URL", "http://localhost:8080")
-	defer os.Unsetenv("LUMIBOT_DB_PATH")
-	defer os.Unsetenv("DISCORD_TOKEN")
-	defer os.Unsetenv("LUMITREE_API_URL")
+	_ = os.Setenv("LUMIBOT_DB_PATH", "/tmp/test.db")
+	_ = os.Setenv("DISCORD_TOKEN", "test-token")
+	_ = os.Setenv("LUMITREE_API_URL", "http://localhost:8080")
+	defer func() {
+		_ = os.Unsetenv("LUMIBOT_DB_PATH")
+		_ = os.Unsetenv("DISCORD_TOKEN")
+		_ = os.Unsetenv("LUMITREE_API_URL")
+	}()
 
 	cfg := Load()
 
