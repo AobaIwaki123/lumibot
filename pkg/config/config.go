@@ -1,55 +1,32 @@
-// Package config provides application configuration loaded from environment variables.
+// Package config provides configuration loading for the bot.
 package config
 
-import (
-	"fmt"
-	"os"
-	"strings"
-)
+import "os"
 
-// Config represents the application configuration.
+// Config holds the application configuration.
 type Config struct {
+	DBPath         string
 	DiscordToken   string
-	DiscordAppID   string
 	LumitreeAPIURL string
-	DatabasePath   string
-	LogLevel       string
 }
 
-// Load loads configuration from environment variables with sensible defaults.
-func Load() (*Config, error) {
-	token := strings.TrimSpace(os.Getenv("DISCORD_TOKEN"))
-	appID := strings.TrimSpace(os.Getenv("DISCORD_APP_ID"))
-
-	apiURL := strings.TrimSpace(os.Getenv("LUMITREE_API_URL"))
-	if apiURL == "" {
-		apiURL = "https://lumitree.aooba.net"
-	}
-	apiURL = strings.TrimRight(apiURL, "/")
-
-	dbPath := strings.TrimSpace(os.Getenv("SQLITE_DB_PATH"))
+// Load reads the configuration from environment variables and provides defaults.
+func Load() *Config {
+	dbPath := os.Getenv("LUMIBOT_DB_PATH")
 	if dbPath == "" {
 		dbPath = "lumibot.db"
 	}
 
-	logLevel := strings.ToLower(strings.TrimSpace(os.Getenv("LOG_LEVEL")))
-	if logLevel == "" {
-		logLevel = "info"
+	discordToken := os.Getenv("DISCORD_TOKEN")
+
+	apiURL := os.Getenv("LUMITREE_API_URL")
+	if apiURL == "" {
+		apiURL = "https://api.lumitree.example.com"
 	}
 
 	return &Config{
-		DiscordToken:   token,
-		DiscordAppID:   appID,
+		DBPath:         dbPath,
+		DiscordToken:   discordToken,
 		LumitreeAPIURL: apiURL,
-		DatabasePath:   dbPath,
-		LogLevel:       logLevel,
-	}, nil
-}
-
-// Validate checks whether required configuration values are present.
-func (c *Config) Validate() error {
-	if c.DiscordToken == "" {
-		return fmt.Errorf("DISCORD_TOKEN is required")
 	}
-	return nil
 }

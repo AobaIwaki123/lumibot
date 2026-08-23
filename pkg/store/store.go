@@ -1,4 +1,4 @@
-// Package store provides SQLite-backed persistent storage for subscriptions and guild settings.
+// Package store provides SQLite-backed persistent storage.
 package store
 
 import (
@@ -10,8 +10,18 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-// Store provides methods to interact with the SQLite database.
-type Store struct {
+// Store provides methods to interact with the database.
+type Store interface {
+	AddSubscription(ctx context.Context, guildID, calendarID, title string) error
+	ListSubscriptions(ctx context.Context, guildID string) ([]Subscription, error)
+	RemoveSubscription(ctx context.Context, guildID, calendarID string) error
+	SetNotifyChannel(ctx context.Context, guildID, channelID string) error
+	GetGuildSettings(ctx context.Context, guildID string) (*GuildSettings, error)
+	Close() error
+}
+
+// SQLStore is the SQLite implementation of Store.
+type SQLStore struct {
 	db *sql.DB
 }
 
@@ -34,13 +44,13 @@ type GuildSettings struct {
 }
 
 // New creates and initializes a Store with the given database path.
-func New(dbPath string) (*Store, error) {
+func New(dbPath string) (Store, error) {
 	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
 
-	s := &Store{db: db}
+	s := &SQLStore{db: db}
 	if err := s.initSchema(context.Background()); err != nil {
 		_ = db.Close()
 		return nil, fmt.Errorf("failed to initialize schema: %w", err)
@@ -50,11 +60,11 @@ func New(dbPath string) (*Store, error) {
 }
 
 // Close closes the underlying database connection.
-func (s *Store) Close() error {
+func (s *SQLStore) Close() error {
 	return s.db.Close()
 }
 
-func (s *Store) initSchema(ctx context.Context) error {
+func (s *SQLStore) initSchema(ctx context.Context) error {
 	query := `
 	CREATE TABLE IF NOT EXISTS guild_settings (
 		guild_id TEXT PRIMARY KEY,
@@ -79,8 +89,8 @@ func (s *Store) initSchema(ctx context.Context) error {
 	return err
 }
 
-// AddSubscription adds a new subscription to a guild.
-func (s *Store) AddSubscription(ctx context.Context, guildID, calendarID, title string) error {
+// AddSubscription adds a new subscription.
+func (s *SQLStore) AddSubscription(ctx context.Context, guildID, calendarID, title string) error {
 	query := `
 	INSERT INTO subscriptions (guild_id, calendar_id, calendar_title)
 	VALUES (?, ?, ?)
@@ -93,8 +103,8 @@ func (s *Store) AddSubscription(ctx context.Context, guildID, calendarID, title 
 	return nil
 }
 
-// ListSubscriptions returns all subscriptions for a guild.
-func (s *Store) ListSubscriptions(ctx context.Context, guildID string) ([]Subscription, error) {
+// ListSubscriptions returns all subscriptions.
+func (s *SQLStore) ListSubscriptions(ctx context.Context, guildID string) ([]Subscription, error) {
 	query := `
 	SELECT id, guild_id, calendar_id, calendar_title, created_at
 	FROM subscriptions
@@ -115,16 +125,11 @@ func (s *Store) ListSubscriptions(ctx context.Context, guildID string) ([]Subscr
 		}
 		results = append(results, sub)
 	}
-
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("row error: %w", err)
-	}
-
-	return results, nil
+	return results, rows.Err()
 }
 
-// RemoveSubscription removes a subscription from a guild.
-func (s *Store) RemoveSubscription(ctx context.Context, guildID, calendarID string) error {
+// RemoveSubscription removes a subscription.
+func (s *SQLStore) RemoveSubscription(ctx context.Context, guildID, calendarID string) error {
 	query := `DELETE FROM subscriptions WHERE guild_id = ? AND calendar_id = ?;`
 	_, err := s.db.ExecContext(ctx, query, guildID, calendarID)
 	if err != nil {
@@ -133,8 +138,8 @@ func (s *Store) RemoveSubscription(ctx context.Context, guildID, calendarID stri
 	return nil
 }
 
-// SetNotifyChannel sets the daily notification channel for a guild.
-func (s *Store) SetNotifyChannel(ctx context.Context, guildID, channelID string) error {
+// SetNotifyChannel sets the notification channel.
+func (s *SQLStore) SetNotifyChannel(ctx context.Context, guildID, channelID string) error {
 	query := `
 	INSERT INTO guild_settings (guild_id, notify_channel_id)
 	VALUES (?, ?)
@@ -147,8 +152,8 @@ func (s *Store) SetNotifyChannel(ctx context.Context, guildID, channelID string)
 	return nil
 }
 
-// GetGuildSettings returns the settings for a guild.
-func (s *Store) GetGuildSettings(ctx context.Context, guildID string) (*GuildSettings, error) {
+// GetGuildSettings retrieves guild settings.
+func (s *SQLStore) GetGuildSettings(ctx context.Context, guildID string) (*GuildSettings, error) {
 	query := `
 	SELECT guild_id, notify_channel_id, alert_channel_id, cron_time, created_at
 	FROM guild_settings
@@ -159,10 +164,7 @@ func (s *Store) GetGuildSettings(ctx context.Context, guildID string) (*GuildSet
 		&gs.GuildID, &gs.NotifyChannelID, &gs.AlertChannelID, &gs.CronTime, &gs.CreatedAt,
 	)
 	if err == sql.ErrNoRows {
-		return &GuildSettings{
-			GuildID:  guildID,
-			CronTime: "08:00",
-		}, nil
+		return &GuildSettings{GuildID: guildID, CronTime: "08:00"}, nil
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to get guild settings: %w", err)
