@@ -1,3 +1,4 @@
+// Package client provides the lumitree API client.
 package client
 
 import (
