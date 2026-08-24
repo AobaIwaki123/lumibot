@@ -9,7 +9,9 @@ import (
 
 	"github.com/AobaIwaki123/lumibot/pkg/client"
 	"github.com/AobaIwaki123/lumibot/pkg/store"
+	"github.com/AobaIwaki123/lumitree/pkg/api"
 	"github.com/bwmarrin/discordgo"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 	robfigcron "github.com/robfig/cron/v3"
 )
 
@@ -22,7 +24,7 @@ type Cron struct {
 }
 
 // New creates a new Cron instance.
-func New(s *discordgo.Session, st store.Store, api client.Client) (*Cron, error) {
+func New(s *discordgo.Session, st store.Store, apiClient client.Client) (*Cron, error) {
 	loc, err := time.LoadLocation("Asia/Tokyo")
 	if err != nil {
 		return nil, fmt.Errorf("failed to load location: %w", err)
@@ -34,10 +36,9 @@ func New(s *discordgo.Session, st store.Store, api client.Client) (*Cron, error)
 		scheduler: c,
 		session:   s,
 		store:     st,
-		api:       api,
+		api:       apiClient,
 	}
 
-	// MVP: Hardcoded to 08:00 AM JST daily
 	_, err = c.AddFunc("0 8 * * *", cronJob.dailyBroadcast)
 	if err != nil {
 		return nil, fmt.Errorf("failed to add cron func: %w", err)
@@ -63,11 +64,6 @@ func (c *Cron) dailyBroadcast() {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 
-	// In MVP, we might need a way to list ALL guilds that have subscriptions,
-	// but currently the Store only has ListSubscriptions(guildID).
-	// To do this efficiently, we need a new Store method: GetAllGuildIDs()
-	// For now, we will add it to the Store interface.
-
 	guildIDs, err := c.store.GetAllGuildIDs(ctx)
 	if err != nil {
 		slog.Error("Failed to get guild IDs for broadcast", "error", err)
@@ -91,15 +87,22 @@ func (c *Cron) broadcastToGuild(ctx context.Context, guildID string) {
 		return
 	}
 
+	now := time.Now().In(time.FixedZone("Asia/Tokyo", 9*60*60))
+	today := openapi_types.Date{Time: now}
+	params := &api.GetCalendarEventsParams{
+		From: &today,
+		To:   &today,
+	}
+
 	for _, sub := range subs {
-		events, err := c.api.GetEvents(ctx, sub.CalendarID, nil) // MVP fetches upcoming/today
+		events, err := c.api.GetEvents(ctx, sub.CalendarID, params)
 		if err != nil {
 			slog.Error("Failed to fetch events for cron", "calendar_id", sub.CalendarID, "error", err)
 			continue
 		}
 
 		if len(events) == 0 {
-			continue // Don't spam if no events
+			continue
 		}
 
 		var embeds []*discordgo.MessageEmbed
@@ -107,24 +110,21 @@ func (c *Cron) broadcastToGuild(ctx context.Context, guildID string) {
 			if idx >= 5 {
 				break
 			}
-			desc := ""
-			if ev.Description != nil {
-				desc = *ev.Description
-				if len(desc) > 200 {
-					desc = desc[:197] + "..."
-				}
-			}
 			loc := "TBD"
 			if ev.Location != nil && *ev.Location != "" {
 				loc = *ev.Location
 			}
+			link := "No Link"
+			if ev.Url != nil && *ev.Url != "" {
+				link = *ev.Url
+			}
 			embeds = append(embeds, &discordgo.MessageEmbed{
-				Title:       ev.Title,
-				Description: desc,
-				Color:       0x00b0f4,
+				Title: ev.Title,
+				Color: 0x00b0f4,
 				Fields: []*discordgo.MessageEmbedField{
-					{Name: "Time", Value: fmt.Sprintf("%s - %s", ev.StartAt.Local().Format("15:04"), ev.EndAt.Local().Format("15:04")), Inline: true},
+					{Name: "Date", Value: ev.StartAt.In(now.Location()).Format("2006/01/02"), Inline: true},
 					{Name: "Location", Value: loc, Inline: true},
+					{Name: "Link", Value: link, Inline: false},
 				},
 			})
 		}
