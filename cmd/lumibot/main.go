@@ -2,10 +2,13 @@
 package main
 
 import (
+	"context"
 	"log/slog"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/AobaIwaki123/lumibot/pkg/bot"
 	"github.com/AobaIwaki123/lumibot/pkg/client"
@@ -54,6 +57,35 @@ func main() {
 	}
 	cronJob.Start()
 
+	// Start Health Check Server
+	mux := http.NewServeMux()
+	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("OK"))
+	})
+	mux.HandleFunc("/ready", func(w http.ResponseWriter, r *http.Request) {
+		// Example readiness logic: check DB connection or Discord session
+		if discordBot.Session == nil {
+			http.Error(w, "Service Unavailable", http.StatusServiceUnavailable)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("OK"))
+	})
+
+	srv := &http.Server{
+		Addr:              ":8080",
+		Handler:           mux,
+		ReadHeaderTimeout: 5 * time.Second,
+	}
+
+	go func() {
+		slog.Info("Starting health check server on :8080")
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			slog.Error("Health check server failed", "error", err)
+		}
+	}()
+
 	slog.Info("Lumibot is now running. Press CTRL-C to exit.")
 
 	// Wait for interrupt signal
@@ -62,6 +94,14 @@ func main() {
 	<-sc
 
 	slog.Info("Shutting down...")
+
+	// Graceful shutdown of HTTP server
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		slog.Error("Failed to gracefully shutdown health server", "error", err)
+	}
+
 	cronJob.Stop()
 	_ = discordBot.Stop()
 }
