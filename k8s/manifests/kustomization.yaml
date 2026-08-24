@@ -7,7 +7,6 @@ resources:
   - namespace.yaml
   - pvc.yaml
   - deployment.yaml
-  - secret.yaml
 
 images:
   - name: ghcr.io/aobaiwaki123/lumibot
