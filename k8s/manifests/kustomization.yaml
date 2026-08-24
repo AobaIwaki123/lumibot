@@ -7,12 +7,7 @@ resources:
   - namespace.yaml
   - pvc.yaml
   - deployment.yaml
-
-# Dummy secret generator. In a real environment, use ExternalSecrets or SealedSecrets.
-secretGenerator:
-  - name: lumibot-secrets
-    envs:
-      - secret.env
+  - secret.yaml
 
 images:
   - name: ghcr.io/aobaiwaki123/lumibot
