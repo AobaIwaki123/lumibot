@@ -3,6 +3,7 @@ name: Docker Publish
 on:
   push:
     branches:
+      - main
       - release
     tags:
       - 'v*'
@@ -42,6 +43,7 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=sha,format=short
+            type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and Push
         uses: docker/build-push-action@v5
