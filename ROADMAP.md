@@ -23,10 +23,10 @@ It serves as a guide for prioritizing tasks and understanding the overall direct
 - [x] **Daily Cron Job**: Implement a scheduler (`robfig/cron/v3`) to automatically fetch and broadcast events every morning at 08:00 JST to the configured channels.
 - [x] **Dockerization**: Complete the multi-stage Distroless Dockerfile and enable automated GHCR multi-arch builds via `docker-publish.yml`.
 
-## Phase 3: Production Readiness & Deployment (Not Started)
+## Phase 3: Production Readiness & Deployment (In Progress)
 
-- [x] **Documentation**:  Expand `README.md` with setup instructions, environment variable references, and bot invitation link guidelines.
-- [ ] **Kubernetes Manifests**: Create Kustomize manifests and ArgoCD Application definitions for deploying `lumibot` alongside `lumitree`.
+- [x] **Documentation**: Expand `README.md` with setup instructions, environment variable references, and bot invitation link guidelines.
+- [x] **Kubernetes Manifests**: Create Kustomize manifests and ArgoCD Application definitions for deploying `lumibot` alongside `lumitree`.
 - [ ] **Observability**: Add structured logging and basic health check endpoints.
 - [ ] **Live Testing**: End-to-end verification in a staging Discord server.
 

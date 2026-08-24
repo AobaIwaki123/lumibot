@@ -35,3 +35,4 @@ data/
 .vscode/
 *.swp
 *~
+k8s/manifests/secret.env

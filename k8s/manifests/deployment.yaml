@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lumibot
+  labels:
+    app: lumibot
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate # Required for SQLite PVC (ReadWriteOnce)
+  selector:
+    matchLabels:
+      app: lumibot
+  template:
+    metadata:
+      labels:
+        app: lumibot
+    spec:
+      securityContext:
+        fsGroup: 65532 # nonroot group for distroless
+      containers:
+        - name: lumibot
+          image: ghcr.io/aobaiwaki123/lumibot:latest
+          imagePullPolicy: Always
+          env:
+            - name: LUMITREE_API_URL
+              value: "http://lumitree.lumitree.svc.cluster.local" # Internal K8s DNS to lumitree API
+            - name: LUMIBOT_DB_PATH
+              value: "/data/lumibot.db"
+            - name: DISCORD_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: lumibot-secrets
+                  key: discord-token
+          volumeMounts:
+            - name: data-volume
+              mountPath: /data
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "128Mi"
+      volumes:
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: lumibot-pvc
