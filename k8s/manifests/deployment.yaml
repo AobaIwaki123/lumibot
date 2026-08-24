@@ -24,7 +24,7 @@ spec:
           imagePullPolicy: Always
           env:
             - name: LUMITREE_API_URL
-              value: "http://lumitree.lumitree.svc.cluster.local"
+              value: "http://lumitree.lumitree.svc.cluster.local:8080"
             - name: LUMIBOT_DB_PATH
               value: "/data/lumibot.db"
             - name: DISCORD_TOKEN
