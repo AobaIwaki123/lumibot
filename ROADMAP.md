@@ -11,7 +11,7 @@ It serves as a guide for prioritizing tasks and understanding the overall direct
 - [x] **Data Persistence**: Implement Pure-Go SQLite (`modernc.org/sqlite`) for zero-dependency local storage (`pkg/store`), and write CRUD unit tests.
 - [x] **Dependency Pinning**: Resolve Go Toolchain auto-upgrade issues and ensure stable CI builds.
 
-## Phase 2: Minimum Viable Product (MVP) (In Progress)
+## Phase 2: Minimum Viable Product (MVP) (Completed)
 
 - [x] **API Integration**: Implement the `lumitree` API client (`pkg/client`) to fetch calendar meta-data and event lists.
 - [x] **Discord Bot Core**: Setup `bwmarrin/discordgo` session and graceful shutdown logic.
@@ -20,8 +20,8 @@ It serves as a guide for prioritizing tasks and understanding the overall direct
   - `/list`: Display currently subscribed calendars.
   - `/remove <ID>`: Unsubscribe a calendar.
   - `/today`: Manually fetch and display today's events as Discord Embeds.
-- [ ] **Daily Cron Job**: Implement a scheduler (`robfig/cron/v3`) to automatically fetch and broadcast events every morning at 08:00 JST to the configured channels.
-- [ ] **Dockerization**: Complete the multi-stage Distroless Dockerfile and enable automated GHCR multi-arch builds via `docker-publish.yml`.
+- [x] **Daily Cron Job**: Implement a scheduler (`robfig/cron/v3`) to automatically fetch and broadcast events every morning at 08:00 JST to the configured channels.
+- [x] **Dockerization**: Complete the multi-stage Distroless Dockerfile and enable automated GHCR multi-arch builds via `docker-publish.yml`.
 
 ## Phase 3: Production Readiness & Deployment (Not Started)
 

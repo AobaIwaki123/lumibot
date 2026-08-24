@@ -10,6 +10,7 @@ import (
 	"github.com/AobaIwaki123/lumibot/pkg/bot"
 	"github.com/AobaIwaki123/lumibot/pkg/client"
 	"github.com/AobaIwaki123/lumibot/pkg/config"
+	"github.com/AobaIwaki123/lumibot/pkg/cron"
 	"github.com/AobaIwaki123/lumibot/pkg/store"
 )
 
@@ -45,6 +46,14 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Initialize and Start Cron Scheduler
+	cronJob, err := cron.New(discordBot.Session, st, apiClient)
+	if err != nil {
+		slog.Error("Failed to initialize cron", "error", err)
+		os.Exit(1)
+	}
+	cronJob.Start()
+
 	slog.Info("Lumibot is now running. Press CTRL-C to exit.")
 
 	// Wait for interrupt signal
@@ -53,5 +62,6 @@ func main() {
 	<-sc
 
 	slog.Info("Shutting down...")
+	cronJob.Stop()
 	_ = discordBot.Stop()
 }

@@ -17,6 +17,7 @@ type Store interface {
 	RemoveSubscription(ctx context.Context, guildID, calendarID string) error
 	SetNotifyChannel(ctx context.Context, guildID, channelID string) error
 	GetGuildSettings(ctx context.Context, guildID string) (*GuildSettings, error)
+	GetAllGuildIDs(ctx context.Context) ([]string, error)
 	Close() error
 }
 
@@ -170,4 +171,30 @@ func (s *SQLStore) GetGuildSettings(ctx context.Context, guildID string) (*Guild
 		return nil, fmt.Errorf("failed to get guild settings: %w", err)
 	}
 	return &gs, nil
+}
+
+// GetAllGuildIDs returns a list of unique guild IDs that have settings or subscriptions.
+func (s *SQLStore) GetAllGuildIDs(ctx context.Context) ([]string, error) {
+	query := `
+	SELECT DISTINCT guild_id FROM (
+		SELECT guild_id FROM guild_settings
+		UNION
+		SELECT guild_id FROM subscriptions
+	)
+	`
+	rows, err := s.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get all guild ids: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+
+	var ids []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, fmt.Errorf("failed to scan guild id: %w", err)
+		}
+		ids = append(ids, id)
+	}
+	return ids, rows.Err()
 }

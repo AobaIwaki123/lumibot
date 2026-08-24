@@ -15,6 +15,7 @@ type MockStore struct {
 	RemoveSubscriptionFunc func(ctx context.Context, guildID, calendarID string) error
 	SetNotifyChannelFunc   func(ctx context.Context, guildID, channelID string) error
 	GetGuildSettingsFunc   func(ctx context.Context, guildID string) (*store.GuildSettings, error)
+	GetAllGuildIDsFunc     func(ctx context.Context) ([]string, error)
 	CloseFunc              func() error
 }
 
@@ -32,6 +33,12 @@ func (m *MockStore) SetNotifyChannel(ctx context.Context, guildID, channelID str
 }
 func (m *MockStore) GetGuildSettings(ctx context.Context, guildID string) (*store.GuildSettings, error) {
 	return m.GetGuildSettingsFunc(ctx, guildID)
+}
+func (m *MockStore) GetAllGuildIDs(ctx context.Context) ([]string, error) {
+	if m.GetAllGuildIDsFunc != nil {
+		return m.GetAllGuildIDsFunc(ctx)
+	}
+	return []string{}, nil
 }
 func (m *MockStore) Close() error {
 	return nil
