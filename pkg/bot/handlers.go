@@ -9,6 +9,7 @@ import (
 
 	"github.com/AobaIwaki123/lumitree/pkg/api"
 	"github.com/bwmarrin/discordgo"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 func (b *Bot) onInteractionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -142,12 +143,12 @@ func (b *Bot) handleToday(s *discordgo.Session, i *discordgo.InteractionCreate) 
 	}
 
 	sub := subs[0]
-	
+
 	now := time.Now().In(time.FixedZone("Asia/Tokyo", 9*60*60))
-	todayStr := now.Format("2006-01-02")
+	today := openapi_types.Date{Time: now}
 	params := &api.GetCalendarEventsParams{
-		From: &todayStr,
-		To:   &todayStr,
+		From: &today,
+		To:   &today,
 	}
 
 	events, err := b.Client.GetEvents(ctx, sub.CalendarID, params)

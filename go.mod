@@ -3,7 +3,7 @@ module github.com/AobaIwaki123/lumibot
 go 1.23.0
 
 require (
-	github.com/AobaIwaki123/lumitree v1.10.0
+	github.com/AobaIwaki123/lumitree v1.11.0
 	github.com/bwmarrin/discordgo v0.29.0
 	github.com/robfig/cron/v3 v3.0.1
 	modernc.org/sqlite v1.33.1

@@ -11,6 +11,7 @@ import (
 	"github.com/AobaIwaki123/lumibot/pkg/store"
 	"github.com/AobaIwaki123/lumitree/pkg/api"
 	"github.com/bwmarrin/discordgo"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 	robfigcron "github.com/robfig/cron/v3"
 )
 
@@ -87,10 +88,10 @@ func (c *Cron) broadcastToGuild(ctx context.Context, guildID string) {
 	}
 
 	now := time.Now().In(time.FixedZone("Asia/Tokyo", 9*60*60))
-	todayStr := now.Format("2006-01-02")
+	today := openapi_types.Date{Time: now}
 	params := &api.GetCalendarEventsParams{
-		From: &todayStr,
-		To:   &todayStr,
+		From: &today,
+		To:   &today,
 	}
 
 	for _, sub := range subs {

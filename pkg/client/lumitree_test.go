@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/AobaIwaki123/lumitree/pkg/api"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 // mockAPIClient implements api.ClientWithResponsesInterface for testing.
@@ -95,15 +97,35 @@ func TestLumitreeClient_GetCalendar(t *testing.T) {
 }
 
 func TestLumitreeClient_GetEvents(t *testing.T) {
+	testDate := openapi_types.Date{Time: time.Date(2026, 8, 25, 0, 0, 0, 0, time.UTC)}
+
 	tests := []struct {
 		name        string
+		params      *api.GetCalendarEventsParams
 		mockResp    *api.GetCalendarEventsResponse
 		mockErr     error
 		expectErr   bool
 		expectCount int
 	}{
 		{
-			name: "success",
+			name: "success with params",
+			params: &api.GetCalendarEventsParams{
+				From: &testDate,
+				To:   &testDate,
+			},
+			mockResp: &api.GetCalendarEventsResponse{
+				HTTPResponse: &http.Response{StatusCode: http.StatusOK},
+				JSON200: &api.EventListResponse{
+					Events: []api.Event{
+						{Title: "Event 1"},
+					},
+				},
+			},
+			expectErr:   false,
+			expectCount: 1,
+		},
+		{
+			name: "success without params",
 			mockResp: &api.GetCalendarEventsResponse{
 				HTTPResponse: &http.Response{StatusCode: http.StatusOK},
 				JSON200: &api.EventListResponse{
@@ -134,11 +156,16 @@ func TestLumitreeClient_GetEvents(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mock := &mockAPIClient{
 				GetCalendarEventsFunc: func(ctx context.Context, calendarId api.CalendarIdParam, params *api.GetCalendarEventsParams, reqEditors ...api.RequestEditorFn) (*api.GetCalendarEventsResponse, error) {
+					if tt.params != nil {
+						if params == nil || params.From != tt.params.From || params.To != tt.params.To {
+							t.Errorf("params mismatch: expected %v, got %v", tt.params, params)
+						}
+					}
 					return tt.mockResp, tt.mockErr
 				},
 			}
 			client := &lumitreeClient{apiClient: mock}
-			events, err := client.GetEvents(context.Background(), "test-id", nil)
+			events, err := client.GetEvents(context.Background(), "test-id", tt.params)
 
 			if tt.expectErr {
 				if err == nil {
