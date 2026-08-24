@@ -7,7 +7,7 @@ metadata:
 spec:
   replicas: 1
   strategy:
-    type: Recreate # Required for SQLite PVC (ReadWriteOnce)
+    type: Recreate
   selector:
     matchLabels:
       app: lumibot
@@ -24,7 +24,7 @@ spec:
           imagePullPolicy: Always
           env:
             - name: LUMITREE_API_URL
-              value: "http://lumitree.lumitree.svc.cluster.local" # Internal K8s DNS to lumitree API
+              value: "http://lumitree.lumitree.svc.cluster.local"
             - name: LUMIBOT_DB_PATH
               value: "/data/lumibot.db"
             - name: DISCORD_TOKEN
@@ -32,6 +32,21 @@ spec:
                 secretKeyRef:
                   name: lumibot-secrets
                   key: discord-token
+          ports:
+            - containerPort: 8080
+              name: health
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: health
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: health
+            initialDelaySeconds: 5
+            periodSeconds: 10
           volumeMounts:
             - name: data-volume
               mountPath: /data
