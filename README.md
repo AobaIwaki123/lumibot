@@ -8,82 +8,75 @@ Lightweight Discord Bot for TimeTree public calendar briefings and notifications
 
 ---
 
-## Overview
+## 概要
 
-`lumibot` is a lightweight Discord Bot that integrates with the [`lumitree`](https://github.com/AobaIwaki123/lumitree) API to deliver public TimeTree calendar schedules directly to your Discord servers.
+`lumibot` は、[`lumitree`](https://github.com/AobaIwaki123/lumitree) API と連携し、TimeTree 公開カレンダーのスケジュールを Discord サーバーへ自動配信・照会する軽量 Bot です。
 
-- **Daily Morning Briefings**: Automatically posts today's schedule to registered channels every morning at 08:00 JST.
-- **Slash Commands**: Interactive commands like `/add`, `/list`, `/remove`, and `/today` for on-demand schedule checks and subscription management.
-- **Lightweight**: Pure-Go architecture utilizing `modernc.org/sqlite` (CGo-free) for zero-dependency local storage.
-- **Secure**: Operates exclusively with public calendars, requiring no user account credentials.
+- **朝の定期ダイジェスト配信**: 毎朝決まった時間に登録グループの「今日の予定」を Embed 形式で自動投稿。
+- **スラッシュコマンド照会**: `/today`, `/list`, `/add`, `/remove` による即時確認と購読管理。
+- **超軽量・省リソース**: Pure-Go (CGo-free SQLite) によるシングルバイナリ設計（数十 MB 以下で常駐）。
+- **ゼロ・クレデンシャル**: ユーザーのアカウント情報（ID・パスワード）不要で安全に運用可能。
 
 ---
 
-## Setup Instructions
+## セットアップ手順
 
-### 1. Create a Discord Application
+### 1. Discord アプリケーションの作成
 
-1. Go to the [Discord Developer Portal](https://discord.com/developers/applications).
-2. Click "New Application" and give it a name.
-3. Navigate to the "Bot" tab and click "Add Bot".
-4. Copy the "Token" and save it securely. This will be your `DISCORD_TOKEN`.
-5. Note your "Application ID" from the "General Information" tab.
+1. [Discord Developer Portal](https://discord.com/developers/applications) にアクセスします。
+2. 「New Application」をクリックし、Bot の名前を入力します。
+3. 左側のメニューから「Bot」タブを開き、「Add Bot」をクリックします。
+4. 「Token」をコピーして安全な場所に保存してください（これが `DISCORD_TOKEN` になります）。
+5. 「General Information」タブから「Application ID」をメモしておきます。
 
-### 2. Generate an Invitation Link
+### 2. Bot の招待リンク作成
 
-To invite the bot to your server, generate an OAuth2 URL:
+サーバーへ Bot を招待するため、以下の手順で URL を生成します。
 
-1. In the Developer Portal, go to "OAuth2" -> "URL Generator".
-2. Select the `bot` and `applications.commands` scopes.
-3. Select the required bot permissions:
+1. Developer Portal の「OAuth2」->「URL Generator」を開きます。
+2. Scopes で `bot` と `applications.commands` を選択します。
+3. Bot Permissions で以下の権限を選択します。
    - `Send Messages`
    - `Embed Links`
-4. Copy the generated URL and open it in your browser to invite the bot to your server.
+4. 下部に生成された URL をブラウザで開き、自身のサーバーへ Bot を招待します。
 
-### 3. Run the Bot Locally
+### 3. ローカルでの起動方法
 
-You can run the bot directly using Go:
+環境変数を設定し、以下のコマンドで起動します。
 
 ```bash
 export DISCORD_TOKEN="your-bot-token"
-export LUMITREE_API_URL="http://localhost:8080" # URL of your running lumitree instance
+export LUMITREE_API_URL="http://localhost:8080" # ローカル起動している lumitree のURL
 
 go run ./cmd/lumibot
 ```
 
-Or build the binary:
-
-```bash
-go build -o lumibot ./cmd/lumibot
-./lumibot
-```
-
 ---
 
-## Environment Variables
+## 環境変数設定
 
-| Variable | Required | Default Value | Description |
+| 環境変数 | 必須 | デフォルト値 | 説明 |
 | :--- | :---: | :--- | :--- |
-| `DISCORD_TOKEN` | Yes | - | Discord Bot Token required for authentication. |
-| `LUMITREE_API_URL` | No | `https://api.lumitree.example.com` | URL of the upstream `lumitree` API server. |
-| `LUMIBOT_DB_PATH` | No | `lumibot.db` | File path for the SQLite database. |
+| `DISCORD_TOKEN` | ◯ | - | Discord Bot Token |
+| `LUMITREE_API_URL` | - | `https://api.lumitree.example.com` | 接続先 lumitree API サーバー URL |
+| `LUMIBOT_DB_PATH` | - | `lumibot.db` | SQLite データベースファイルのパス |
 
 ---
 
-## Development & Local Testing (TDD)
+## 開発とローカル検証 (TDD)
 
-All tasks should be performed in a dedicated Git Worktree. Do not commit directly to `main`.
+`main` への直接コミットは禁止されています。必ず Git Worktree を作成して作業してください。
 
 ```bash
-# Create a new worktree for your task
+# タスク用の Git Worktree を作成
 ./scripts/worktree.sh create feat/your-feature-name
 
-# Run all verification checks (format, lint, test, build)
+# 全テスト & リント & ビルド検証 (Push 前に必ず実行)
 ./scripts/verify-all.sh
 ```
 
 ---
 
-## License
+## ライセンス
 
 [MIT License](LICENSE) (c) 2026 Aoba Iwaki
