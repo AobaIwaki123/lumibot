@@ -25,7 +25,7 @@ It serves as a guide for prioritizing tasks and understanding the overall direct
 
 ## Phase 3: Production Readiness & Deployment (Not Started)
 
-- [ ] **Documentation**: Expand `README.md` with setup instructions, environment variable references, and bot invitation link guidelines.
+- [x] **Documentation**:  Expand `README.md` with setup instructions, environment variable references, and bot invitation link guidelines.
 - [ ] **Kubernetes Manifests**: Create Kustomize manifests and ArgoCD Application definitions for deploying `lumibot` alongside `lumitree`.
 - [ ] **Observability**: Add structured logging and basic health check endpoints.
 - [ ] **Live Testing**: End-to-end verification in a staging Discord server.
